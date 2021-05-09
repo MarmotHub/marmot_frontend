@@ -17,33 +17,15 @@ import LiquidityAddRemove from "../../components/uniswap/SubModals/LiquidityAddR
 import PricePanel from "../Trade/component/PricePanel";
 import ReactGA from "react-ga";
 
-const FooterWrapper = styled.div`
-  width: 100%;
-  position: relative;
-  background-color: ${({theme}) => theme.color.bg3};
-  border-radius: 20px;
-`
 
 const Liquidity: React.FC = () => {
-  const onConfirm = () => {
-    return
-  };
-  const onDismiss = () => {
-    return
-  };
 
-
-  const handleConfirm = useCallback(() => {
-    onConfirm();
-    // onDismiss();
-  }, [onConfirm, onDismiss]);
-  const handleDismiss = useCallback(() => onDismiss(), [onDismiss]);
   const [showSearch, setShowSearch] = useState<boolean>(false);
   const handleSearchDismiss = useCallback(() => {
     setShowSearch(false)
   }, [setShowSearch])
 
-  const {account, connect, status, error} = useWallet()
+  const {account, connect} = useWallet()
   const para = usePara()
 
   const [addOpen, setAddOpen] = useState<boolean>(false);

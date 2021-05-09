@@ -53,7 +53,7 @@ const PositionButton: React.FC<AccountButtonProps> = (props) => {
         />
       ) : (
         <Button
-          onClick={() => onPresentTransactionModal()}
+          onClick={() => {}}
           size="sm"
           text={shortenAddress(account)}
         />

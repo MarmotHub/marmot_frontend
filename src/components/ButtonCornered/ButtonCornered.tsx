@@ -2,7 +2,7 @@ import React, { useContext, useMemo } from 'react'
 import styled, { ThemeContext } from 'styled-components'
 
 import { Link } from 'react-router-dom'
-import { TYPE, ExternalLinkIcon, TrashIcon, ButtonText, ExternalLink } from '../../theme'
+
 
 interface ButtonProps {
   children?: React.ReactNode,

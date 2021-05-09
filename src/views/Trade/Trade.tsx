@@ -77,7 +77,7 @@ const Trade: React.FC = () => {
               <Button
                 onClick={approve}
                 size="lg"
-                text="Approve TestUSDT"
+                text="Approve TestBUSD"
                 variant="secondary"
                 disabled={approveStatus === ApprovalState.PENDING}
               />

@@ -18,6 +18,7 @@ const StyledDialogOverlay = styled(AnimatedDialogOverlay)`
     display: flex;
     align-items: center;
     justify-content: center;
+    margin-top: 80px;
   }
 
 `
@@ -36,15 +37,16 @@ const StyledDialogContent = styled(({minHeight, maxHeight, singleCol, mobile, is
     margin: 0 0 0 0;
     color: ${({theme}) => theme.color.white};
     background-color: transparent;
-    box-shadow: 0 4px 8px 0 ${({theme}) => transparentize(0.95, theme.shadow1)};
+    
     padding: 0px;
     overflow-y: ${({mobile}) => (mobile ? 'scroll' : 'hidden')};
     overflow-x: hidden;
 
     align-self: ${({mobile}) => (mobile ? 'flex-end' : 'center')};
 
-    min-height: ${({minHeight}) => `${minHeight}vh`};
-    max-height: ${({maxHeight}) => `${maxHeight}vh`};
+  
+    min-height: "400px";
+    max-height: "400px";
 
     
     max-width: ${({mobile, singleCol}) =>
