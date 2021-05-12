@@ -53,7 +53,6 @@ const UserAccountInfo: React.FC<MarketCloseProps> = ({
                                                        showMarketClose,
                                                        handleMarketClose
                                                      }) => {
-  const theme = useContext(ThemeContext)
   const para = usePara()
   const marginAccount = useMarginAccount()
   const indexPrice = useIndexPrice()
@@ -64,12 +63,12 @@ const UserAccountInfo: React.FC<MarketCloseProps> = ({
 
 
   useEffect(() => {
-    if (para?.isUnlocked) {
+    if (para && para.isUnlocked) {
       updateOnchain().catch(err => console.error(err.stack));
       const refreshBalance = setInterval(updateOnchain, config.refreshInterval);
       return () => clearInterval(refreshBalance);
     }
-  }, [para?.isUnlocked]);
+  }, [para]);
 
   const updateOnchain = useCallback(async () => {
       setBalanceMargin(BN2display(await para.balanceMargin()))

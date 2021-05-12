@@ -57,12 +57,12 @@ export default function PoolAccountInfo() {
 
 
   useEffect(() => {
-    if (para?.isUnlocked) {
+    if (para && para.isUnlocked) {
       updateOnchain().catch(err => console.error(err.stack));
       const refreshOnchain = setInterval(updateOnchain, config.refreshInterval);
       return () => clearInterval(refreshOnchain);
     }
-  }, [para?.isUnlocked]);
+  }, [para]);
 
   const updateOnchain = useCallback(async () => {
       setInitialMarginRate(BN2display(await para.getInitialMarginRate()))

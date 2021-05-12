@@ -1,4 +1,4 @@
-import React, {useCallback, useContext, useMemo, useState} from 'react'
+import React, {useCallback, useContext, useEffect, useMemo, useState} from 'react'
 import {RowBetween, RowFixed} from '../Row'
 import {Text} from 'rebass'
 import styled from 'styled-components'
@@ -10,19 +10,14 @@ import {MenuItem, Separator} from "../SearchModal/styleds";
 import {useWallet} from "use-wallet";
 import {Context as PopupContext} from '../../../contexts/Popups';
 import {Tokens} from "../../../contexts/Popups/Popups";
-
+import usePara from "../../../hooks/usePara";
+import {PerpetualAddress} from "../../../deployment/const"
 
 const CloseIcon = styled(X)<{ onClick: () => void }>`
   cursor: pointer;
 `
 const PaddedColumn = styled(AutoColumn)`
   padding: 20px;
-`
-const HalfWrapper = styled.div`
-  width: 100%;
-  display: flex;
-  flex-direction: row;
-  gap:10px;
 `
 
 const Wrapper = styled.div`
@@ -49,9 +44,6 @@ const FooterWrapper = styled.div`
 `
 
 
-const Section = styled(AutoColumn)`
-  padding: 24px;
-`
 
 
 export default function SelectContract(
@@ -68,13 +60,29 @@ export default function SelectContract(
   const handleSelect = useCallback((token: string) => {
       if (token === 'ETH') {
         setSelectedToken(Tokens.ETH)
+        onDismiss()
       }
       if (token === 'BTC') {
         setSelectedToken(Tokens.BTC)
+        onDismiss()
       }
     },
     []
   )
+
+  const para = usePara()
+  useEffect(() => {
+    if (para && para.isUnlocked) {
+      if (selectedToken == Tokens.ETH) {
+        para.updateContract('ETH');
+        para.connectContract();
+      }
+      else {
+        para.updateContract('BTC');
+        para.connectContract();
+      }
+    }
+  }, [selectedToken])
 
   const isSelected = useCallback((token: string) => {
       if (token == 'ETH' && selectedToken == Tokens.ETH) {
@@ -95,7 +103,7 @@ export default function SelectContract(
           key={`token-item-${token}`}
           className={`token-item-${token}`}
           onClick={() => {
-            handleSelect(token)
+            handleSelect(token);
           }}
           disabled={false}
           selected={isSelected(token)}

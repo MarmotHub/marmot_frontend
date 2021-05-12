@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import React, {useCallback, useContext, useEffect, useMemo, useState} from 'react';
 import ReactGA from 'react-ga';
 import styled from 'styled-components';
 import {useWallet} from 'use-wallet';
@@ -17,6 +17,8 @@ import usePara from "../../hooks/usePara";
 import useApprove, {ApprovalState} from "../../hooks/useApprove";
 import {ParaAddress} from "../../deployment/const";
 import PricePanel from "./component/PricePanel";
+import {Context as PopupContext} from "../../contexts/Popups"
+import {Tokens} from "../../contexts/Popups/Popups";
 
 
 const Trade: React.FC = () => {
@@ -27,6 +29,7 @@ const Trade: React.FC = () => {
 
   const {account, connect, chainId} = useWallet()
   const para = usePara()
+  const {selectedToken} = useContext(PopupContext)
 
   const [mainShow, setMainShow] = useState<boolean>(true);
   const [depositOpen, setDepositOpen] = useState<boolean>(false);
@@ -35,13 +38,13 @@ const Trade: React.FC = () => {
   const [sellOpen, setSellOpen] = useState<boolean>(false);
 
   const buyClick = useMemo(() => {
-    if (para && para.isUnlocked) {
-      return true
-    }
-    return false
-  },
+      if (para && para.isUnlocked) {
+        return true
+      }
+      return false
+    },
     [para]
-    )
+  )
 
 
   const handleDismissBuySell = useCallback(
@@ -65,9 +68,15 @@ const Trade: React.FC = () => {
     handleDismissBuySell()
   }, [account, chainId]);
 
+  useEffect(() => {
+    if (!account || !para) {
+      connect('injected');
+    }
+  }, []);
+
   ReactGA.pageview('/Trade');
   const ApproveSector: React.FC = () => {
-    const [approveStatus, approve] = useApprove(para?.TestUSDT, ParaAddress);
+    const [approveStatus, approve] = useApprove(para?.TestUSDT, para.contracts["ParaInstance"].address);
 
     return (
       <>
@@ -145,9 +154,9 @@ const Trade: React.FC = () => {
                 }}
             >
                 <Row>
-                    <CurrencyLogo name={"BTC"}/>
+                    <CurrencyLogo name={selectedToken==Tokens.BTC? "BTC": "ETH"}/>
                     <Text fontWeight={500} fontSize={20} marginLeft={'12px'}>
-                      {"BTC/BUSD"}
+                      {selectedToken==Tokens.BTC? "BTC/BUSD" : "ETH/BUSD"}
                     </Text>
                 </Row>
             </ButtonDropdownLight>
@@ -185,7 +194,7 @@ const Trade: React.FC = () => {
         }
 
 
-        <Modal isOpen={showSearch} onDismiss={handleSearchDismiss} maxHeight={80} minHeight={50}  singleCol={true}>
+        <Modal isOpen={showSearch} onDismiss={handleSearchDismiss} maxHeight={80} minHeight={50} singleCol={true}>
           <SelectContract
             onDismiss={handleSearchDismiss}
           />
@@ -214,15 +223,11 @@ const Trade: React.FC = () => {
 };
 
 
-
-
 const Wrapper = styled.div`
   display: flex;
   flex-direction: row;
   width: 100%;
 `;
-
-
 
 
 const StyledSpacer = styled.div`

@@ -1,4 +1,4 @@
-import React, {useCallback, useState} from 'react';
+import React, {useCallback, useContext, useState} from 'react';
 import styled from 'styled-components';
 import {useWallet} from 'use-wallet';
 import Page from '../../components/Page';
@@ -16,10 +16,13 @@ import {ParaAddress} from "../../deployment/const";
 import LiquidityAddRemove from "../../components/uniswap/SubModals/LiquidityAddRemove";
 import PricePanel from "../Trade/component/PricePanel";
 import ReactGA from "react-ga";
+import {Context as PopupContext} from "../../contexts/Popups";
+import {Tokens} from "../../contexts/Popups/Popups";
 
 
 const Liquidity: React.FC = () => {
 
+  const {selectedToken} = useContext(PopupContext)
   const [showSearch, setShowSearch] = useState<boolean>(false);
   const handleSearchDismiss = useCallback(() => {
     setShowSearch(false)
@@ -40,7 +43,7 @@ const Liquidity: React.FC = () => {
   ReactGA.pageview('/Liquidity');
 
   const ApproveSector: React.FC = () => {
-    const [approveStatus, approve] = useApprove(para?.TestUSDT, ParaAddress);
+    const [approveStatus, approve] = useApprove(para?.TestUSDT, para.contracts["ParaInstance"].address);
 
     return (
       <>
@@ -60,7 +63,7 @@ const Liquidity: React.FC = () => {
               <StyledModalAction>
                 <Button
                   size="lg"
-                  text="ADD LP"
+                  text="LP ADD"
                   onClick={() => {
                     setAddOpen(true)
                   }}
@@ -70,7 +73,7 @@ const Liquidity: React.FC = () => {
               <StyledModalAction>
                 <Button
                   size="lg"
-                  text="REMOVE LP"
+                  text="LP REMOVE"
                   onClick={() => {
                     setRemoveOpen(true)
                   }}
@@ -115,9 +118,9 @@ const Liquidity: React.FC = () => {
             }}
           >
             <Row>
-              <CurrencyLogo name={"BTC"}/>
+              <CurrencyLogo name={selectedToken == Tokens.BTC ? "BTC" : "ETH"}/>
               <Text fontWeight={500} fontSize={20} marginLeft={'12px'}>
-                {"BTC/BUSD"}
+                {selectedToken == Tokens.BTC ? "BTC/BUSD" : "ETH/BUSD"}
               </Text>
             </Row>
           </ButtonDropdownLight>

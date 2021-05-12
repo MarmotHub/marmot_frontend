@@ -1,4 +1,4 @@
-import React, {useMemo, useState, useCallback} from 'react'
+import React, {useCallback, useContext, useState} from 'react'
 import {RowBetween, RowFixed} from '../Row'
 import {Text} from 'rebass'
 import styled from 'styled-components'
@@ -7,15 +7,14 @@ import Column, {AutoColumn} from "../Column";
 import {Separator} from "../SearchModal/styleds";
 import ButtonCornered from "../../ButtonCornered";
 import CurrencyInputPanel from "../CurrencyInputPanel";
-import BuySellFooter from "./Component/BuySellFooter";
 import usePara from "../../../hooks/usePara";
 import useTestUSDTBalance from "../../../hooks/useTestUSDTBalance";
-import {getDisplayBalance, getBalance} from "../../../utils/formatBalance"
 import {BN2display, decimal2BN} from "../../../utils/Converter";
 import useLpTokenBalance from "../../../hooks/useLpTokenBalance";
-import useLpTokenTotalSupply from "../../../hooks/useLpTokenTotalSupply";
 import {TYPE} from "../../../theme";
 import useHandleTransactionReceipt from "../../../hooks/useHandleTransactionReceipt";
+import {Context as PopupContext} from "../../../contexts/Popups";
+import {Tokens} from "../../../contexts/Popups/Popups";
 
 const CloseIcon = styled(X)<{ onClick: () => void }>`
   cursor: pointer;
@@ -104,15 +103,13 @@ export default function LiquidityAddRemove(
     addOpen?: boolean
   }) {
   // toggle between tokens and lists
+  const {selectedToken} = useContext(PopupContext)
   const [showLists, setShowLists] = useState(addOpen)
-  const userAddedTokens: string[] = ["ETH", "FEI"]
 
   const para = usePara()
   const testUSDTBalance = useTestUSDTBalance()
   const lpTokenBalance = useLpTokenBalance()
-  const lpTokenTotalSupply = useLpTokenTotalSupply()
-  const [price, setPrice] = useState("60000")
-  const [amount, setAmount] = useState('0.1')
+  // const lpTokenTotalSupply = useLpTokenTotalSupply()
   const [collateralVal, setCollateralVal] = useState<string>('0')
   const handleTypeInput = useCallback(
     (collateralVal: string) => {
@@ -127,7 +124,7 @@ export default function LiquidityAddRemove(
     () => {
       handleTransactionReceipt(
         para.lpAdd(decimal2BN(collateralVal)),
-        `LP Add ${collateralVal} BUSD`,
+        `Add LP ${collateralVal} BUSD`,
       );
     }, [para, collateralVal]);
 
@@ -135,7 +132,7 @@ export default function LiquidityAddRemove(
     () => {
       handleTransactionReceipt(
         para.lpRemove(decimal2BN(collateralVal)),
-        `LP Remove ${collateralVal} LP Token`,
+        `Remove LP ${collateralVal} LP Token`,
       );
     }, [para, collateralVal]);
 
@@ -204,7 +201,7 @@ export default function LiquidityAddRemove(
                 headerLabel={`Wallet Balance: ${BN2display(testUSDTBalance)} BUSD`}
                 id="removelp"
                 showCurrency={true}
-                currencyName={'BUSD-BTC'}
+                currencyName={selectedToken==Tokens.BTC? 'BUSD-BTC' : "BUSD-ETH"}
               />)
             }
               <RowFixed>

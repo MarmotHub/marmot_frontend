@@ -83,13 +83,20 @@ const ConfirmModal: React.FC<ConfirmProps> = (
       setEntryPrice(BN2display(entryPriceBN))
 
       const marginAccount: MarginAccount = await para.getMarginAccount()
-      setSizeBefore(BN2display(marginAccount.SIZE))
+      const sizeBeforeBN = marginAccount.SIZE
       const sizeAfterBN = marginAccount.SIDE === Side.FLAT || marginAccount.SIDE === side ? marginAccount.SIZE.add(decimal2BN(contractSize)) : marginAccount.SIZE.sub(decimal2BN(contractSize))
-      setSizeAfter(BN2display(sizeAfterBN))
+      if (sizeAfterBN.isNegative()) {
+        setSizeBefore(`${marginAccount.SIDE === Side.SHORT? 'SHORT': 'LONG'} ${BN2display(sizeBeforeBN)}`)
+        setSizeAfter(`${marginAccount.SIDE === Side.SHORT? 'LONG': 'SHORT'} ${BN2display(sizeAfterBN.abs())}`)
+      }
+      else {
+        setSizeBefore(BN2display(sizeBeforeBN))
+        setSizeAfter(BN2display(sizeAfterBN))
+      }
       const leverageBeforeBN = await para.getLeverage()
       const leverageAfterBN = await para.getLeverage(decimal2BN(contractSize), side)
-      setLeverageBefore(BN2display(leverageBeforeBN))
-      setLeverageAfter(BN2display(leverageAfterBN))
+      setLeverageBefore(BN2display(leverageBeforeBN.abs()))
+      setLeverageAfter(BN2display(leverageAfterBN.abs()))
 
       // FEE
       const LPFeeRateBN = await para.getLPFeeRate()
@@ -117,7 +124,7 @@ const ConfirmModal: React.FC<ConfirmProps> = (
       <StyledContentArea>
         <StyledContentTitle>
           <CurrencyLogo name={'BTC'} style={{paddingRight: '12px'}}/>
-          BUY/LONG BTC
+          {isBuy? `BUY/LONG BTC` : `SELL/SHORT BTC`}
         </StyledContentTitle>
         <RowBetween>
           <RowFixed>
@@ -169,7 +176,7 @@ const ConfirmModal: React.FC<ConfirmProps> = (
           <RowFixed>
             <RowFixed>
               <PositionText fontSize={14} fontWeight={400} color={theme.color.white}>
-                {`${leverageBefore} x->${leverageAfter} x`}
+                {`${leverageBefore} X->${leverageAfter} X`}
               </PositionText>
             </RowFixed>
           </RowFixed>

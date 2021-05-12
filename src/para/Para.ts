@@ -11,6 +11,8 @@ import {
   PricingAddress,
   TestUSDTAddress
 } from "../deployment/const";
+
+import {PerpetualAddress} from "../deployment/const";
 import config from '../config';
 import {web3ProviderFrom} from './ether-utils';
 import {NaiveOracle as NaiveOracleABI} from "../deployment/ABI/NaiveOracle.json";
@@ -56,16 +58,14 @@ export class Para {
     this.config = cfg;
     this.provider = provider;
     // parapara contracts
+    this.TestUSDT = new ERC20Mintable(PerpetualAddress.TestBUSDAddress, this.provider, 'TestBUSD');
     this.contracts = {};
-    this.contracts["NaiveOracleInstance"] = new Contract(NaiveOracleAddress, NaiveOracleABI, provider);
-    this.contracts["ParaInstance"] = new Contract(ParaAddress, ParaABI, provider);
-    this.contracts["ParaPlaceInstance"] = new Contract(ParaPlaceAddress, ParaPlaceABI, provider);
-    this.contracts["PricingInstance"] = new Contract(PricingAddress, PricingABI, this.provider);
-    this.contracts["AdminInstance"] = new Contract(AdminAddress, AdminABI, this.provider);
-    // BUSD contract
-    this.TestUSDT = new ERC20Mintable(TestUSDTAddress, this.provider, 'TestUSDT');
-    this.LpToken = new ERC20(LpTokenAddress, this.provider, 'FANG_PARA_LP_TOKEN_');
-
+    this.contracts["ParaPlaceInstance"] = new Contract(PerpetualAddress.ParaPlaceAddress, ParaPlaceABI, this.provider);
+    // this.contracts["NaiveOracleInstance"] = new Contract(NaiveOracleAddress, NaiveOracleABI, provider);
+    this.contracts["ParaInstance"] = new Contract(PerpetualAddress.BTCBUSD.ParaAddress, ParaABI, this.provider);
+    this.contracts["PricingInstance"] = new Contract(PerpetualAddress.BTCBUSD.PricingAddress, PricingABI, this.provider);
+    this.contracts["AdminInstance"] = new Contract(PerpetualAddress.BTCBUSD.AdminAddress, AdminABI, this.provider);
+    this.LpToken = new ERC20(PerpetualAddress.BTCBUSD.LpTokenAddress, this.provider, 'MARMOT_BTC_LP_TOKEN_');
   }
 
   /**
@@ -77,12 +77,29 @@ export class Para {
     this.signer = newProvider.getSigner();
     this.myAccount = account;
     this.TestUSDT.connect(this.signer);
-    this.contracts["ParaInstance"] = this.contracts["ParaInstance"].connect(this.signer);
     this.contracts["ParaPlaceInstance"] = this.contracts["ParaPlaceInstance"].connect(this.signer);
+    console.log(`🔓 Wallet is unlocked. Welcome, ${account}!`);
+  }
+
+  connectContract() {
+    this.contracts["ParaInstance"] = this.contracts["ParaInstance"].connect(this.signer);
     this.contracts["PricingInstance"] = this.contracts["PricingInstance"].connect(this.signer);
     this.contracts["AdminInstance"] = this.contracts["AdminInstance"].connect(this.signer);
+  }
 
-    console.log(`🔓 Wallet is unlocked. Welcome, ${account}!`);
+  updateContract(Ticker: string) {
+    if (Ticker === 'ETH') {
+      this.contracts["ParaInstance"] = new Contract(PerpetualAddress.ETHBUSD.ParaAddress, ParaABI, this.provider);
+      this.contracts["PricingInstance"] = new Contract(PerpetualAddress.ETHBUSD.PricingAddress, PricingABI, this.provider);
+      this.contracts["AdminInstance"] = new Contract(PerpetualAddress.ETHBUSD.AdminAddress, AdminABI, this.provider);
+      this.LpToken = new ERC20(PerpetualAddress.ETHBUSD.LpTokenAddress, this.provider, 'MARMOT_ETH_LP_TOKEN_');
+    }
+    else {
+      this.contracts["ParaInstance"] = new Contract(PerpetualAddress.BTCBUSD.ParaAddress, ParaABI, this.provider);
+      this.contracts["PricingInstance"] = new Contract(PerpetualAddress.BTCBUSD.PricingAddress, PricingABI, this.provider);
+      this.contracts["AdminInstance"] = new Contract(PerpetualAddress.BTCBUSD.AdminAddress, AdminABI, this.provider);
+      this.LpToken = new ERC20(PerpetualAddress.BTCBUSD.LpTokenAddress, this.provider, 'MARMOT_BTC_LP_TOKEN_');
+    }
   }
 
   get isUnlocked(): boolean {
@@ -94,12 +111,12 @@ export class Para {
     await this.provider.ready;
     try {
       let tx = await this.TestUSDT.approve(
-        ParaAddress, MAX_INT);
+        this.contracts["ParaInstance"].address, MAX_INT);
       // let tx = await this.TestUSDT.totalSupply();
       console.log(tx);
     } catch (err) {
       console.log("signer", this.signer);
-      console.error(`Failed to approve TestUSDT: ${err}`);
+      console.error(`Failed to approve TestBUSD: ${err}`);
     }
   }
 
@@ -189,7 +206,7 @@ export class Para {
 
   async getPoolMarginAccount(): Promise<any> {
     const {ParaInstance} = this.contracts;
-    return await ParaInstance._MARGIN_ACCOUNT_(ParaAddress);
+    return await ParaInstance._MARGIN_ACCOUNT_(this.contracts["ParaInstance"].address);
   }
 
   async availableMargin(): Promise<BigNumber | undefined> {
