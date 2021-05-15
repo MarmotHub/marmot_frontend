@@ -11,8 +11,7 @@ export const Context = createContext<ParaContext>({para: undefined});
 
 export const ParaProvider: React.FC = ({children}) => {
   const {ethereum, account, chainId, status, error, connect} = useWallet();
-  console.log('useWallet', account, chainId, ethereum);
-  console.log('status', status, 'error', error)
+
   const [para, setPara] = useState<Para>();
 
 
@@ -25,7 +24,7 @@ export const ParaProvider: React.FC = ({children}) => {
     }
 
     setPara(para);
-    console.log('account change', account);
+    // console.log('account change', account);
   }, [account, chainId, status]);
 
 

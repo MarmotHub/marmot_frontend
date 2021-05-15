@@ -1,4 +1,4 @@
-import React, {useCallback, useContext, useState} from 'react'
+import React, {useCallback, useContext, useEffect, useState} from 'react'
 import {RowBetween, RowFixed} from '../Row'
 import {Text} from 'rebass'
 import styled from 'styled-components'
@@ -9,12 +9,15 @@ import ButtonCornered from "../../ButtonCornered";
 import CurrencyInputPanel from "../CurrencyInputPanel";
 import usePara from "../../../hooks/usePara";
 import useTestUSDTBalance from "../../../hooks/useTestUSDTBalance";
-import {BN2display, decimal2BN} from "../../../utils/Converter";
+import {BN2decimal, BN2display, decimal2BN} from "../../../utils/Converter";
 import useLpTokenBalance from "../../../hooks/useLpTokenBalance";
 import {TYPE} from "../../../theme";
 import useHandleTransactionReceipt from "../../../hooks/useHandleTransactionReceipt";
 import {Context as PopupContext} from "../../../contexts/Popups";
 import {Tokens} from "../../../contexts/Popups/Popups";
+import config from "../../../config";
+import {useHasPendingTransaction} from "../../../state/transactions/hooks";
+import {BigNumber} from "ethers";
 
 const CloseIcon = styled(X)<{ onClick: () => void }>`
   cursor: pointer;
@@ -104,54 +107,80 @@ export default function LiquidityAddRemove(
   }) {
   // toggle between tokens and lists
   const {selectedToken} = useContext(PopupContext)
+  const poolSymbol = selectedToken==Tokens.BTC? 'BUSD-BTC' : "BUSD-ETH";
   const [showLists, setShowLists] = useState(addOpen)
 
   const para = usePara()
-  const testUSDTBalance = useTestUSDTBalance()
   const lpTokenBalance = useLpTokenBalance()
   // const lpTokenTotalSupply = useLpTokenTotalSupply()
-  const [collateralVal, setCollateralVal] = useState<string>('0')
+  const [collateralBN, setCollateralBN] = useState<BigNumber>(BigNumber.from(0))
+  const [collateralVal, setCollateralVal] = useState<string>("0")
+  const [availableMarginBN, setAvailableMarginBN] = useState<BigNumber>(BigNumber.from(0))
+
+
+
+
+
+  useEffect(() => {
+    if (para && para.isUnlocked) {
+      updateOnchain().catch(err => console.error(err.stack));
+      const refreshBalance = setInterval(updateOnchain, config.refreshInterval);
+      return () => clearInterval(refreshBalance);
+    }
+  }, [para]);
+
+  const updateOnchain = useCallback(async () => {
+      setAvailableMarginBN(await para.availableMargin())
+    },
+    []
+  );
+
   const handleTypeInput = useCallback(
     (collateralVal: string) => {
       setCollateralVal(collateralVal)
-      return collateralVal
+      if (collateralVal) {
+        setCollateralBN(decimal2BN(collateralVal))
+      }
     },
     [collateralVal]
   )
+
 
   const handleTransactionReceipt = useHandleTransactionReceipt();
   const handleAdd = useCallback(
     () => {
       handleTransactionReceipt(
-        para.lpAdd(decimal2BN(collateralVal)),
-        `Add LP ${collateralVal} BUSD`,
+        para.lpAdd(collateralBN),
+        `Add ${BN2decimal(collateralBN)} BUSD to pool ${poolSymbol}`,
       );
-    }, [para, collateralVal]);
+    }, [para, collateralBN]);
 
   const handleRemove = useCallback(
     () => {
       handleTransactionReceipt(
-        para.lpRemove(decimal2BN(collateralVal)),
-        `Remove LP ${collateralVal} LP Token`,
+        para.lpRemove(collateralBN),
+        `Remove ${BN2decimal(collateralBN)} LP Token from pool ${poolSymbol}`,
       );
-    }, [para, collateralVal]);
+    }, [para, collateralBN]);
 
 
   const handleOnAddMax = useCallback(
     () => {
-      const balance = BN2display(testUSDTBalance)
-      setCollateralVal(String(balance));
+      setCollateralBN(availableMarginBN);
+      setCollateralVal(BN2decimal(availableMarginBN));
     },
-    [testUSDTBalance]
+    [availableMarginBN]
   )
 
   const handleOnRemoveMax = useCallback(
     () => {
-      const balance = BN2display(lpTokenBalance)
-      setCollateralVal(String(balance));
+      setCollateralBN(lpTokenBalance);
+      setCollateralVal(BN2decimal(lpTokenBalance));
     },
     [lpTokenBalance]
   )
+
+  const pendingTransaction = useHasPendingTransaction();
 
   return (
     <>
@@ -187,7 +216,7 @@ export default function LiquidityAddRemove(
                 onMax={handleOnAddMax}
                 showMaxButton={true}
                 label={'Amount'}
-                headerLabel={`Wallet Balance: ${BN2display(testUSDTBalance)} BUSD`}
+                headerLabel={`Available Margin: ${BN2display(availableMarginBN)} BUSD`}
                 id="addlp"
                 showCurrency={true}
                 currencyName={'BUSD'}
@@ -198,10 +227,10 @@ export default function LiquidityAddRemove(
                 onMax={handleOnRemoveMax}
                 showMaxButton={true}
                 label={'Amount'}
-                headerLabel={`Wallet Balance: ${BN2display(testUSDTBalance)} BUSD`}
+                headerLabel={`Available Margin: ${BN2display(availableMarginBN)} BUSD`}
                 id="removelp"
                 showCurrency={true}
-                currencyName={selectedToken==Tokens.BTC? 'BUSD-BTC' : "BUSD-ETH"}
+                currencyName={poolSymbol}
               />)
             }
               <RowFixed>
@@ -213,8 +242,10 @@ export default function LiquidityAddRemove(
           </Column>
           <SubWrapper>
             {showLists
-              ? (<ButtonCornered text="ADD" variant="secondary" onClick={handleAdd}/>)
-              : (<ButtonCornered text="REMOVE" variant="secondary" onClick={handleRemove}/>)
+              ? (<ButtonCornered text="ADD" variant="secondary" onClick={handleAdd} disabled={pendingTransaction || availableMarginBN.lte(0)}
+              loading={pendingTransaction}/>)
+              : (<ButtonCornered text="REMOVE" variant="secondary" onClick={handleRemove} disabled={pendingTransaction || lpTokenBalance.lte(0)}
+              loading={pendingTransaction}/>)
             }
           </SubWrapper>
         </FooterWrapper>

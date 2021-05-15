@@ -1,4 +1,4 @@
-import React, {useCallback, useState} from 'react'
+import React, {useCallback, useContext, useState} from 'react'
 import {RowBetween} from '../Row'
 import {Text} from 'rebass'
 import styled from 'styled-components'
@@ -11,12 +11,16 @@ import usePara from "../../../hooks/usePara";
 import useAvailableMarginBalance from "../../../hooks/useAvailableMarginBalance";
 import UserInfoBulletin from "./Component/UserInfoBulletin";
 import PoolInfoBulletin from "./Component/PoolInfoBulletin";
-import {BN2display, decimal2BN} from "../../../utils/Converter";
+import {BN2decimal, BN2display, decimal2BN} from "../../../utils/Converter";
 import useHandleTransactionReceipt from "../../../hooks/useHandleTransactionReceipt";
 import Spacer from "../../Spacer";
 import useTestUSDTBalance from "../../../hooks/useTestUSDTBalance";
 import {TYPE} from "../../../theme";
 import {RowFixed} from "../../Row";
+import {useHasPendingTransaction} from "../../../state/transactions/hooks";
+import {Context as PopupContext} from "../../../contexts/Popups";
+import {Tokens} from "../../../contexts/Popups/Popups";
+import {BigNumber} from "ethers";
 
 const CloseIcon = styled(X)<{ onClick: () => void }>`
   cursor: pointer;
@@ -106,16 +110,22 @@ export default function DepositWithdraw(
   }) {
   // toggle between tokens and lists
   const para = usePara()
+  const {selectedToken} = useContext(PopupContext)
+  const poolSymbol = selectedToken==Tokens.BTC? 'BUSD-BTC' : "BUSD-ETH";
   const testUSDTBalance = useTestUSDTBalance()
   const availableMarginBalance = useAvailableMarginBalance()
   const [showDeposit, setShowDeposit] = useState(depositOpen)
-  const [collateralVal, setCollateralVal] = useState('0')
 
+  const [collateralBN, setCollateralBN] = useState<BigNumber>(BigNumber.from(0))
+  const [collateralVal, setCollateralVal] = useState<string>("0")
   const handleTypeInput = useCallback(
     (collateralVal: string) => {
       setCollateralVal(collateralVal)
+      if (collateralVal) {
+        setCollateralBN(decimal2BN(collateralVal))
+      }
     },
-    [setCollateralVal]
+    [collateralVal]
   )
 
 
@@ -124,23 +134,23 @@ export default function DepositWithdraw(
   const handleDeposit = useCallback(
     () => {
       handleTransactionReceipt(
-        para.traderDeposit(decimal2BN(collateralVal)),
-        `Deposit ${collateralVal} BUSD`,
+        para.traderDeposit(collateralBN),
+        `Deposit ${BN2decimal(collateralBN)} BUSD (${poolSymbol})`,
       );
-    }, [para, collateralVal]);
+    }, [para, collateralBN]);
 
   const handleWithdraw = useCallback(
     () => {
       handleTransactionReceipt(
-        para.traderWithdraw(decimal2BN(collateralVal)),
-        `Withdraw ${collateralVal} BUSD`,
+        para.traderWithdraw(collateralBN),
+        `Withdraw ${BN2decimal(collateralBN)} BUSD (${poolSymbol})`,
       );
-    }, [para, collateralVal]);
+    }, [para, collateralBN]);
 
   const handleOnMaxDeposit = useCallback(
     () => {
-      const balance = BN2display(testUSDTBalance)
-      setCollateralVal(String(balance));
+      setCollateralBN(testUSDTBalance);
+      setCollateralVal(BN2decimal(testUSDTBalance))
     },
     [testUSDTBalance]
   )
@@ -148,11 +158,13 @@ export default function DepositWithdraw(
 
   const handleOnMaxWithdraw = useCallback(
     () => {
-      const balance = BN2display(availableMarginBalance)
-      setCollateralVal(String(balance));
+      setCollateralBN(availableMarginBalance);
+      setCollateralVal(BN2decimal(availableMarginBalance))
     },
     [availableMarginBalance]
   )
+
+  const pendingTransaction = useHasPendingTransaction();
 
 
   return (
@@ -218,8 +230,8 @@ export default function DepositWithdraw(
           </Column>
           <SubWrapper>
             {showDeposit
-              ? (<ButtonCornered text="DEPOSIT" variant="secondary" onClick={handleDeposit}/>)
-              : (<ButtonCornered text="WITHDRAW" variant="secondary" onClick={handleWithdraw}/>)
+              ? (<ButtonCornered text="DEPOSIT" variant="secondary" onClick={handleDeposit} disabled={pendingTransaction} loading={pendingTransaction}/>)
+              : (<ButtonCornered text="WITHDRAW" variant="secondary" onClick={handleWithdraw} disabled={pendingTransaction} loading={pendingTransaction}/>)
             }
           </SubWrapper>
         </FooterWrapper>

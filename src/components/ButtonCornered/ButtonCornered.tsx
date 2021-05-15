@@ -1,7 +1,8 @@
-import React, { useContext, useMemo } from 'react'
-import styled, { ThemeContext } from 'styled-components'
+import React, {useContext, useMemo} from 'react'
+import styled, {ThemeContext} from 'styled-components'
+import CircularProgress from '@material-ui/core/CircularProgress';
 
-import { Link } from 'react-router-dom'
+import {Link} from 'react-router-dom'
 
 
 interface ButtonProps {
@@ -12,20 +13,22 @@ interface ButtonProps {
   size?: 'sm' | 'md' | 'lg',
   text?: string,
   to?: string,
-  variant?: 'default' | 'secondary' | 'tertiary'
+  variant?: 'default' | 'secondary' | 'tertiary',
+  loading?: boolean
 }
 
 const ButtonCornered: React.FC<ButtonProps> = ({
-  children,
-  disabled,
-  href,
-  onClick,
-  size,
-  text,
-  to,
-  variant,
-}) => {
-  const { color, spacing } = useContext(ThemeContext)
+                                                 children,
+                                                 disabled,
+                                                 href,
+                                                 onClick,
+                                                 size,
+                                                 text,
+                                                 to,
+                                                 variant,
+                                                 loading
+                                               }) => {
+  const {color, spacing} = useContext(ThemeContext)
 
   let buttonColor: string
   switch (variant) {
@@ -82,6 +85,9 @@ const ButtonCornered: React.FC<ButtonProps> = ({
     >
       {children}
       {ButtonChild}
+      <div style={{display:"inline", paddingLeft:"10px"}}>
+      {loading && <CircularProgress size={"1.5em"}/>}
+      </div>
     </StyledButton>
   )
 }
@@ -96,18 +102,16 @@ interface StyledButtonProps {
 }
 
 
-
-
 const StyledButton = styled.button<StyledButtonProps>`
   position: absolute;
   bottom: 0;
   width: 100%;
-  background-color: ${({ theme }) => theme.color.bg3};
+  background-color: ${({theme}) => theme.color.bg3};
   border: 0;
   border-radius: 20px;
   border-top-right-radius: 0;
   border-top-left-radius: 0;
-  border-top: 1px solid ${({ theme }) => theme.color.bg3};
+  border-top: 1px solid ${({theme}) => theme.color.bg3};
   padding: 20px;
   text-align: center;
   color: ${props => !props.disabled ? props.color : `${props.color}55`};

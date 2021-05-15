@@ -12,7 +12,7 @@ import {
   TestUSDTAddress
 } from "../deployment/const";
 
-import {PerpetualAddress} from "../deployment/const";
+import {PerpetualAddress as Addresses} from "../deployment/const";
 import config from '../config';
 import {web3ProviderFrom} from './ether-utils';
 import {NaiveOracle as NaiveOracleABI} from "../deployment/ABI/NaiveOracle.json";
@@ -33,6 +33,13 @@ export function getDefaultProvider(): ethers.providers.Web3Provider {
 
 const MAX_INT = ethers.constants.MaxUint256;
 const ClaimTestBUSDAmount = decimal2BN("10000")
+let PerpetualAddress: any;
+if (config.name=='bsctest') {
+  PerpetualAddress = Addresses.bsctest
+}
+else {
+  PerpetualAddress = Addresses.development
+}
 /**
  * An API module of Basis Cash contracts.
  * All contract-interacting domain logic should be defined in here.
@@ -125,6 +132,10 @@ export class Para {
     return await this.TestUSDT.claim(this.myAccount)
   }
 
+  async statusClaimTestBUSD(): Promise<any> {
+    return await this.TestUSDT.claimed(this.myAccount)
+  }
+
   async getTestUSDTBalance(): Promise<BigNumber | undefined> {
     const balance = await this.TestUSDT.balanceOf(this.myAccount)
     return balance
@@ -139,8 +150,6 @@ export class Para {
     const supply = await this.LpToken.totalSupply()
     return supply
   }
-
-
 
   async getLPFeeRate(): Promise<BigNumber | undefined> {
     const {AdminInstance} = this.contracts;

@@ -1,4 +1,4 @@
-import React, {useCallback} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import styled from 'styled-components';
 import {useWallet} from 'use-wallet';
 import Button from '../../Button';
@@ -10,6 +10,7 @@ interface TxButtonProps {}
 const ClaimTestBUSDButton: React.FC<TxButtonProps> = () => {
   const { account } = useWallet();
   const para = usePara();
+  const [claimed, setClaimed] = useState<boolean>(false);
 
   const handleTransactionReceipt = useHandleTransactionReceipt();
   const handleClaim = useCallback(
@@ -22,7 +23,15 @@ const ClaimTestBUSDButton: React.FC<TxButtonProps> = () => {
       // console.log(await para._getOracleAddress())
     }, [para]);
 
-
+  // TODO
+  // useEffect(() => {
+  //   async function statusClaim() {
+  //     const status = await para.statusClaimTestBUSD()
+  //     console.log("claim status",status)
+  //     setClaimed(status)
+  //   }
+  //   statusClaim()
+  // }, [para.myAccount])
 
 
   return (
@@ -34,6 +43,7 @@ const ClaimTestBUSDButton: React.FC<TxButtonProps> = () => {
             text={'Claim TestBUSD'}
             variant={'default'}
             onClick={handleClaim}
+            disabled={claimed}
           />
         </StyledTxButton>
       )}

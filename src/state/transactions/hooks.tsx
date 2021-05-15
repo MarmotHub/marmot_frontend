@@ -1,18 +1,18 @@
-import { TransactionResponse } from '@ethersproject/providers';
-import { useCallback, useMemo } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { useWallet } from 'use-wallet';
+import {TransactionResponse} from '@ethersproject/providers';
+import {useCallback, useMemo} from 'react';
+import {useDispatch, useSelector} from 'react-redux';
+import {useWallet} from 'use-wallet';
 
-import { AppDispatch, AppState } from '../index';
-import { addTransaction, clearAllTransactions } from './actions';
-import { TransactionDetails } from './reducer';
+import {AppDispatch, AppState} from '../index';
+import {addTransaction, clearAllTransactions} from './actions';
+import {TransactionDetails} from './reducer';
 
 // helper that can take a ethers library transaction response and add it to the list of transactions
 export function useTransactionAdder(): (
   response: TransactionResponse,
   customData?: { summary?: string; approval?: { tokenAddress: string; spender: string } },
 ) => void {
-  const { chainId, account } = useWallet();
+  const {chainId, account} = useWallet();
   const dispatch = useDispatch<AppDispatch>();
 
   return useCallback(
@@ -30,12 +30,12 @@ export function useTransactionAdder(): (
       // if (!chainId) return;
       // console.log('here3')
 
-      const { hash } = response;
+      const {hash} = response;
       if (!hash) {
         throw Error('No transaction hash found.');
       }
       console.log('here')
-      dispatch(addTransaction({ hash, from: account, chainId, approval, summary }));
+      dispatch(addTransaction({hash, from: account, chainId, approval, summary}));
     },
     [dispatch, chainId, account],
   );
@@ -43,7 +43,7 @@ export function useTransactionAdder(): (
 
 // returns all the transactions for the current chain
 export function useAllTransactions(): { [txHash: string]: TransactionDetails } {
-  const { chainId } = useWallet();
+  const {chainId} = useWallet();
 
   const state = useSelector<AppState, AppState['transactions']>((state) => state.transactions);
 
@@ -95,11 +95,28 @@ export function useHasPendingApproval(
   );
 }
 
+export function useHasPendingTransaction(): boolean {
+  const allTransactions = useAllTransactions();
+  return useMemo(
+    () =>
+      Object.keys(allTransactions).some((hash) => {
+        const tx = allTransactions[hash];
+        if (!tx) return false;
+        if (tx.receipt) {
+          return false;
+        } else {
+          return isTransactionRecent(tx);
+        }
+      }),
+    [allTransactions],
+  );
+}
+
 export function useClearAllTransactions(): { clearAllTransactions: () => void } {
-  const { chainId } = useWallet();
+  const {chainId} = useWallet();
   const dispatch = useDispatch<AppDispatch>();
   return {
-    clearAllTransactions: useCallback(() => dispatch(clearAllTransactions({ chainId })), [
+    clearAllTransactions: useCallback(() => dispatch(clearAllTransactions({chainId})), [
       dispatch,
     ]),
   };

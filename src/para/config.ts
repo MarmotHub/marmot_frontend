@@ -9,6 +9,7 @@ export declare enum ChainId {
 
 
 export type Configuration = {
+  name: string,
   chainId: ChainId,
   etherscanUrl: string,
   defaultProvider: string,

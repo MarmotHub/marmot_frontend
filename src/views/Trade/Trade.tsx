@@ -30,6 +30,7 @@ const Trade: React.FC = () => {
   const {account, connect, chainId} = useWallet()
   const para = usePara()
   const {selectedToken} = useContext(PopupContext)
+  const poolString = selectedToken==Tokens.BTC? "BTC/BUSD" : "ETH/BUSD"
 
   const [mainShow, setMainShow] = useState<boolean>(true);
   const [depositOpen, setDepositOpen] = useState<boolean>(false);
@@ -156,7 +157,7 @@ const Trade: React.FC = () => {
                 <Row>
                     <CurrencyLogo name={selectedToken==Tokens.BTC? "BTC": "ETH"}/>
                     <Text fontWeight={500} fontSize={20} marginLeft={'12px'}>
-                      {selectedToken==Tokens.BTC? "BTC/BUSD" : "ETH/BUSD"}
+                      {poolString}
                     </Text>
                 </Row>
             </ButtonDropdownLight>

@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useState} from 'react'
+import React, {useCallback, useContext, useEffect, useState} from 'react'
 import {RowBetween} from '../Row'
 import {Text} from 'rebass'
 import styled from 'styled-components'
@@ -14,7 +14,7 @@ import PricePanel from "../../../views/Trade/component/PricePanel";
 import useAvailableMarginBalance from "../../../hooks/useAvailableMarginBalance";
 import UserInfoBulletin from "./Component/UserInfoBulletin";
 import PoolInfoBulletin from "./Component/PoolInfoBulletin";
-import {BN2display, decimal2BN, decimalDiv, decimalMul} from "../../../utils/Converter";
+import {BN2decimal, BN2display, decimal2BN, decimalDiv, decimalMul} from "../../../utils/Converter";
 import useHandleTransactionReceipt from "../../../hooks/useHandleTransactionReceipt";
 import useModal from "../../../hooks/useModal";
 import ConfirmModal from "../../Confirm/components/ConfirmModal";
@@ -23,6 +23,9 @@ import {decimalStr} from "../../../utils/formatBalance";
 import useMarginAccount from "../../../hooks/useMarginAccount";
 import {BigNumber} from "ethers";
 import {Side} from "../../../utils/Types";
+import {useHasPendingApproval, useHasPendingTransaction} from "../../../state/transactions/hooks";
+import {Context as PopupContext} from "../../../contexts/Popups";
+import {Tokens} from "../../../contexts/Popups/Popups";
 
 const CloseIcon = styled(X)<{ onClick: () => void }>`
   cursor: pointer;
@@ -111,6 +114,8 @@ export default function BuySell(
   }) {
   // toggle between tokens and lists
   const para = usePara();
+  const {selectedToken} = useContext(PopupContext)
+  const contractSymbol = selectedToken==Tokens.BTC? 'BTC' : "ETH";
   const [showBuy, setShowBuy] = useState(buyOpen)
   const userAddedTokens: string[] = ["ETH", "FEI"]
   const spotPrice = useSpotPrice();
@@ -148,6 +153,7 @@ export default function BuySell(
 
 
   const availableMarginBalance = useAvailableMarginBalance()
+
   const handleOnMaxContractSize = useCallback(
     async () => {
       const val = decimalMul(decimalDiv(availableMarginBalance, await para.getInitialMarginRate()), decimal2BN("0.9"))
@@ -174,7 +180,7 @@ export default function BuySell(
     () => {
       handleTransactionReceipt(
         para.buyBaseToken(decimal2BN(contractSize)),
-        `Buy ${contractSize} BTC`,
+        `Buy ${contractSize} ${contractSymbol}`,
       );
     }, [para, contractSize]);
 
@@ -183,7 +189,7 @@ export default function BuySell(
     () => {
       handleTransactionReceipt(
         para.sellBaseToken(decimal2BN(contractSize)),
-        `Sell ${contractSize} BTC`,
+        `Sell ${contractSize} ${contractSymbol}`,
       );
     }, [para, contractSize]);
 
@@ -194,10 +200,10 @@ export default function BuySell(
       const side = marginAccount.SIDE
       if (side == Side.LONG) {
         setShowBuy(false)
-        setContractSize(BN2display(size, 18))
+        setContractSize(BN2decimal(size))
       } else if (side == Side.SHORT) {
         setShowBuy(true)
-        setContractSize(BN2display(size, 18))
+        setContractSize(BN2decimal(size))
       } else {
         setContractSize("0")
       }
@@ -215,6 +221,8 @@ export default function BuySell(
     <ConfirmModal onDismiss={() => onDismissBuyConfirmModal()} onConfirm={handleBuy} isBuy={true}
                   contractSize={contractSize}/>,
   );
+
+  const pendingTransaction = useHasPendingTransaction();
 
 
   return (
@@ -256,7 +264,7 @@ export default function BuySell(
                 label={'Contract Size'}
                 id="buysell-size"
                 showCurrency={true}
-                currencyName={'BTC'}
+                currencyName={contractSymbol}
               />
               <CurrencyInputPanel
                 value={collateralAmount}
@@ -273,10 +281,12 @@ export default function BuySell(
           <SubWrapper>
             {showBuy
               ? (<ButtonCornered text="BUY/LONG" variant="secondary" onClick={() => onPresentBuyConfirmModal()}
-                                 disabled={Number(contractSize) <= 0}/>)
+                                 disabled={Number(contractSize) <= 0 || pendingTransaction || availableMarginBalance.lte(0)}
+                                 loading={pendingTransaction}/>)
               : (
                 <ButtonCornered text="SELL/SHORT" variant="secondary" onClick={() => onPresentSellConfirmModal()}
-                                disabled={Number(contractSize) <= 0}/>)
+                                disabled={Number(contractSize) <= 0 || pendingTransaction  || availableMarginBalance.lte(0)}
+                                loading={pendingTransaction}/>)
             }
             {/*<ButtonCornered text="SELL/SHORT" variant="secondary" onClick={() => {}}/>*/}
           </SubWrapper>

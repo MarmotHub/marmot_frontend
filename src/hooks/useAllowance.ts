@@ -10,7 +10,7 @@ const useAllowance = (token: ERC20Mintable, spender: string, pendingApproval?: b
 
   const fetchAllowance = useCallback(async () => {
     const allowance = await token.allowance(account!, spender);
-    console.log(`Allowance: ${allowance.toString()} ${token.symbol} for ${spender}`);
+    // console.log(`Allowance: ${allowance.toString()} ${token.symbol} for ${spender}`);
     setAllowance(allowance);
   }, [account, spender, token]);
 
@@ -20,7 +20,7 @@ const useAllowance = (token: ERC20Mintable, spender: string, pendingApproval?: b
     }
   }, [account, spender, token, pendingApproval]);
 
-  console.log(`pendingApproval, ${pendingApproval} account ${account} spender ${spender} token ${token}`)
+  // console.log(`pendingApproval, ${pendingApproval} account ${account} spender ${spender} token ${token}`)
   return allowance;
 };
 

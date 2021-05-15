@@ -33,7 +33,7 @@ function useApprove(token: ERC20Mintable, spender: string): [ApprovalState, () =
         ? ApprovalState.PENDING
         : ApprovalState.NOT_APPROVED
       : ApprovalState.APPROVED;
-    console.log(currentAllowance.lt(APPROVE_BASE_AMOUNT), currentAllowance.toHexString(), APPROVE_BASE_AMOUNT.toHexString())
+    // console.log(currentAllowance.lt(APPROVE_BASE_AMOUNT), currentAllowance.toHexString(), APPROVE_BASE_AMOUNT.toHexString())
     return state
   }, [currentAllowance, pendingApproval]);
 

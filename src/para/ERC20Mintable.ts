@@ -55,6 +55,10 @@ class ERC20Mintable {
     return this.contract.claim(spender);
   }
 
+  claimed(spender: string): Promise<boolean> {
+    return this.contract.claimed(spender);
+  }
+
   transferFrom(
     sender: string,
     recipient: string,

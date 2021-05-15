@@ -1,4 +1,4 @@
-import React, {useCallback, useContext, useEffect, useMemo, useState} from 'react'
+import React, {useCallback, useContext, useEffect, useMemo} from 'react'
 import {RowBetween, RowFixed} from '../Row'
 import {Text} from 'rebass'
 import styled from 'styled-components'
@@ -11,7 +11,6 @@ import {useWallet} from "use-wallet";
 import {Context as PopupContext} from '../../../contexts/Popups';
 import {Tokens} from "../../../contexts/Popups/Popups";
 import usePara from "../../../hooks/usePara";
-import {PerpetualAddress} from "../../../deployment/const"
 
 const CloseIcon = styled(X)<{ onClick: () => void }>`
   cursor: pointer;
@@ -42,7 +41,6 @@ const FooterWrapper = styled.div`
   background-color: ${({theme}) => theme.color.bg3};
   border-radius: 20px;
 `
-
 
 
 

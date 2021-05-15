@@ -18,12 +18,12 @@ const MainProvider: React.FC = ({children}) => {
       <Provider store={store}>
         <Updater/>
         <ParaProvider>
-          <ModalsProvider>
-            <PopupsProvider>
-              <Popups />
+          <PopupsProvider>
+            <ModalsProvider>
+              <Popups/>
               {children}
-            </PopupsProvider>
-          </ModalsProvider>
+            </ModalsProvider>
+          </PopupsProvider>
         </ParaProvider>
       </Provider>
     </UseWalletProvider>

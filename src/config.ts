@@ -11,6 +11,7 @@ enum ChainId {
 
 const configurations: { [env: string]: Configuration } = {
   development: {
+    name: "development",
     chainId: 1337,
     etherscanUrl: 'https://etherscan.io',
     defaultProvider: 'http://localhost:7545',
@@ -18,6 +19,7 @@ const configurations: { [env: string]: Configuration } = {
     gasLimitMultiplier: 1.1,
   },
   mainnet: {
+    name: 'mainnet',
     chainId: ChainId.MAINNET,
     etherscanUrl: 'https://etherscan.io',
     defaultProvider: 'https://mainnet.infura.io/v3/c674b8938c9f424d8c12532ab8b811e5',
@@ -25,6 +27,7 @@ const configurations: { [env: string]: Configuration } = {
     gasLimitMultiplier: 1.1,
   },
   kovan: {
+    name: 'kovan',
     chainId: ChainId.KOVAN,
     etherscanUrl: 'https://kovan.etherscan.io',
     defaultProvider: 'https://kovan.infura.io/v3/c674b8938c9f424d8c12532ab8b811e5',
@@ -32,6 +35,7 @@ const configurations: { [env: string]: Configuration } = {
     gasLimitMultiplier: 1.1,
   },
   bsc: {
+    name: 'bsc',
     chainId: 56,
     etherscanUrl: 'https://bscscan.com',
     defaultProvider: 'https://bsc-dataseed.binance.org/',
@@ -39,6 +43,7 @@ const configurations: { [env: string]: Configuration } = {
     gasLimitMultiplier: 1.1,
   },
   bsctest: {
+    name: 'bsctest',
     chainId: 97,
     etherscanUrl: 'https://testnet.bscscan.com/',
     defaultProvider: 'https://data-seed-prebsc-1-s1.binance.org:8545/',
@@ -48,4 +53,4 @@ const configurations: { [env: string]: Configuration } = {
 };
 
 
-export default configurations["bsctest"];
+export default configurations["development"];

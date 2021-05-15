@@ -13,6 +13,8 @@ import {BN2decimal, BN2display, decimal2BN, decimalDiv, decimalMul} from "../../
 import config from "../../../config";
 import {Side, MarginAccount, getLiquidationPrice} from "../../../utils/Types";
 import useMarginAccount from "../../../hooks/useMarginAccount";
+import {Context as PopupContext} from "../../../contexts/Popups";
+import {Tokens} from "../../../contexts/Popups/Popups";
 
 interface ConfirmProps {
   onDismiss?: () => void;
@@ -32,11 +34,13 @@ const ConfirmModal: React.FC<ConfirmProps> = (
   }) => {
   const theme = useContext(ThemeContext)
   const para = usePara()
+  const {selectedToken} = useContext(PopupContext)
+  const contractSymbol = selectedToken == Tokens.BTC ? 'BTC' : "ETH";
   const marginAccount = useMarginAccount()
-  const onConfirmCallback = useCallback(()=>{
-    onConfirm();
-    onDismiss();
-  },
+  const onConfirmCallback = useCallback(() => {
+      onConfirm();
+      onDismiss();
+    },
     []
   )
   const [quoteAmount, setQuoteAmount] = useState("-");
@@ -52,7 +56,7 @@ const ConfirmModal: React.FC<ConfirmProps> = (
   const [LPFee, setLPFee] = useState("-")
   const [MTFee, setMTFee] = useState("-")
   const [fee, setFee] = useState("-")
-  const side: Side = isBuy? Side.LONG : Side.SHORT
+  const side: Side = isBuy ? Side.LONG : Side.SHORT
 
   const [maintenanceMarginRateBN, setMaintenanceMarginRateBN] = useState<BigNumber>()
 
@@ -86,17 +90,20 @@ const ConfirmModal: React.FC<ConfirmProps> = (
       const sizeBeforeBN = marginAccount.SIZE
       const sizeAfterBN = marginAccount.SIDE === Side.FLAT || marginAccount.SIDE === side ? marginAccount.SIZE.add(decimal2BN(contractSize)) : marginAccount.SIZE.sub(decimal2BN(contractSize))
       if (sizeAfterBN.isNegative()) {
-        setSizeBefore(`${marginAccount.SIDE === Side.SHORT? 'SHORT': 'LONG'} ${BN2display(sizeBeforeBN)}`)
-        setSizeAfter(`${marginAccount.SIDE === Side.SHORT? 'LONG': 'SHORT'} ${BN2display(sizeAfterBN.abs())}`)
-      }
-      else {
+        setSizeBefore(`${marginAccount.SIDE === Side.SHORT ? 'SHORT' : 'LONG'} ${BN2display(sizeBeforeBN)}`)
+        setSizeAfter(`${marginAccount.SIDE === Side.SHORT ? 'LONG' : 'SHORT'} ${BN2display(sizeAfterBN.abs())}`)
+      } else {
         setSizeBefore(BN2display(sizeBeforeBN))
         setSizeAfter(BN2display(sizeAfterBN))
       }
       const leverageBeforeBN = await para.getLeverage()
       const leverageAfterBN = await para.getLeverage(decimal2BN(contractSize), side)
-      setLeverageBefore(BN2display(leverageBeforeBN.abs()))
-      setLeverageAfter(BN2display(leverageAfterBN.abs()))
+      if (leverageBeforeBN) {
+        setLeverageBefore(BN2display(leverageBeforeBN.abs()))
+      }
+      if (leverageAfterBN) {
+        setLeverageAfter(BN2display(leverageAfterBN.abs()))
+      }
 
       // FEE
       const LPFeeRateBN = await para.getLPFeeRate()
@@ -123,8 +130,8 @@ const ConfirmModal: React.FC<ConfirmProps> = (
       </StyledTitleArea>
       <StyledContentArea>
         <StyledContentTitle>
-          <CurrencyLogo name={'BTC'} style={{paddingRight: '12px'}}/>
-          {isBuy? `BUY/LONG BTC` : `SELL/SHORT BTC`}
+          <CurrencyLogo name={contractSymbol} style={{paddingRight: '12px'}}/>
+          {isBuy ? `BUY/LONG ${contractSymbol}` : `SELL/SHORT ${contractSymbol}`}
         </StyledContentTitle>
         <RowBetween>
           <RowFixed>
@@ -171,7 +178,7 @@ const ConfirmModal: React.FC<ConfirmProps> = (
             <PositionText fontSize={14} fontWeight={400} color={theme.color.text2}>
               {'Leverage'}
             </PositionText>
-            <QuestionHelper text="The Maximum Allowed Leverage is 10x"/>
+            <QuestionHelper text="The Maximum Allowed Leverage is 20x"/>
           </RowFixed>
           <RowFixed>
             <RowFixed>
@@ -190,7 +197,7 @@ const ConfirmModal: React.FC<ConfirmProps> = (
           </RowFixed>
           <RowFixed>
             <PositionText fontSize={14} fontWeight={400} color={theme.color.white}>
-              {marginAccount && marginAccount.SIDE !== Side.FLAT ? BN2display(getLiquidationPrice(marginAccount, maintenanceMarginRateBN)): "-"}
+              {marginAccount && marginAccount.SIDE !== Side.FLAT ? BN2display(getLiquidationPrice(marginAccount, maintenanceMarginRateBN)) : "-"}
             </PositionText>
           </RowFixed>
         </RowBetween>
@@ -200,7 +207,8 @@ const ConfirmModal: React.FC<ConfirmProps> = (
             <PositionText fontSize={14} fontWeight={400} color={theme.color.text2}>
               {'Fees'}
             </PositionText>
-            <QuestionHelper text={`Fees include ${Number(BN2decimal(LPFeeRateBN))*100}% LP rate and ${Number(BN2decimal(MTFeeRateBN))*100}% MT rate for this pool`}/>
+            <QuestionHelper
+              text={`Fees include ${Number(BN2decimal(LPFeeRateBN)) * 100}% LP rate and ${Number(BN2decimal(MTFeeRateBN)) * 100}% MT rate for this pool`}/>
           </RowFixed>
           <RowFixed>
             <PositionText fontSize={14} fontWeight={400} color={theme.color.white}>
@@ -311,7 +319,6 @@ const RowBetween = styled(Row)`
     background-color: ${({theme}) => theme.color.grey[600]};
   }
 `
-
 
 
 const RowFixed = styled(Row)<{ gap?: string; justify?: string }>`
