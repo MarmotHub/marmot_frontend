@@ -10,6 +10,7 @@ import config from "../../config";
 import usePara from "../../hooks/usePara";
 import {BigNumber} from "ethers";
 import Button from "../../components/Button";
+import useMarkPrice from "../../hooks/useMarkPrice";
 
 
 const RowInner = styled.div`
@@ -55,7 +56,7 @@ const UserAccountInfo: React.FC<MarketCloseProps> = ({
                                                      }) => {
   const para = usePara()
   const marginAccount = useMarginAccount()
-  const indexPrice = useIndexPrice()
+  const markPrice = useMarkPrice()
 
   const [balanceMargin, setBalanceMargin] = useState("-")
   const [availableMargin, setAvailableMargin] = useState("-")
@@ -119,10 +120,10 @@ const UserAccountInfo: React.FC<MarketCloseProps> = ({
 
       <RowBetween>
         <InfoText text={"Unrealized PNL"}/>
-        <InfoText text={marginAccount && indexPrice
+        <InfoText text={marginAccount && markPrice
           ? marginAccount.SIDE === Side.LONG
-            ? BN2display(decimalMul(marginAccount.SIZE, indexPrice).sub(marginAccount.ENTRY_VALUE))
-            : BN2display(marginAccount.ENTRY_VALUE.sub(decimalMul(marginAccount.SIZE, indexPrice)))
+            ? BN2display(decimalMul(marginAccount.SIZE, markPrice).sub(marginAccount.ENTRY_VALUE))
+            : BN2display(marginAccount.ENTRY_VALUE.sub(decimalMul(marginAccount.SIZE, markPrice)))
           : '-'
         }/>
       </RowBetween>

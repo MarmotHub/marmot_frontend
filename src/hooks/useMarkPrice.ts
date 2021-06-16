@@ -9,7 +9,7 @@ const useMarkPrice = () => {
   const para = usePara();
 
   const fetchPrice = useCallback(async () => {
-      setPrice(await para.getTwapPrice());
+      setPrice(await para.getMarkPrice());
   }, [para, setPrice]);
 
   useEffect(() => {

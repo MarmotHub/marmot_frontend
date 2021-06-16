@@ -2,7 +2,7 @@ import React, {useCallback, useContext, useEffect, useState} from 'react'
 import styled, {ThemeContext} from 'styled-components'
 import {TYPE} from '../../theme'
 import {RowBetween, RowFixed} from '../../components/Row'
-import {BN2display} from "../../utils/Converter";
+import {BN2decimal, BN2display} from "../../utils/Converter";
 import config from "../../config";
 import usePara from "../../hooks/usePara";
 import usePoolMarginAccount from "../../hooks/usePoolMarginAccount";
@@ -52,7 +52,7 @@ export default function PoolAccountInfo() {
   const [LPFee, setLPFee] = useState("-")
   const [MTFee, setMTFee] = useState("-")
   const [fee, setFee] = useState("-")
-
+  const [poolEquity, setPoolEquity] = useState("-")
   const [ENP, setENP] = useState("-")
 
 
@@ -71,10 +71,11 @@ export default function PoolAccountInfo() {
       const LPFeeBN = await para.getLPFeeRate()
       const MTFeeBN = await para.getMTFeeRate()
       const FeeBN = LPFeeBN.add(MTFeeBN)
-      setLPFee(BN2display(LPFeeBN))
-      setMTFee(BN2display(MTFeeBN))
-      setFee(BN2display(FeeBN))
+      setLPFee(BN2decimal(LPFeeBN))
+      setMTFee(BN2decimal(MTFeeBN))
+      setFee(BN2decimal(FeeBN));
       setENP(BN2display(await para._poolNetPositionRatio()))
+      setPoolEquity(BN2display(await para._poolEquity()))
     },
     []
   );
@@ -93,13 +94,13 @@ export default function PoolAccountInfo() {
 
       <RowBetween>
         <InfoText text={"Pool Liquidity"}/>
-        <InfoText text={poolAccount ? `${BN2display(poolAccount.CASH_BALANCE)} BUSD` : '-'}/>
+        <InfoText text={poolAccount ? `${poolEquity} BUSD` : '-'}/>
       </RowBetween>
 
-      <RowBetween>
-        <InfoText text={"Pool ENP"}/>
-        <InfoText text={poolAccount ? ENP : '-'}/>
-      </RowBetween>
+      {/*<RowBetween>*/}
+      {/*  <InfoText text={"Pool ENP"}/>*/}
+      {/*  <InfoText text={poolAccount ? ENP : '-'}/>*/}
+      {/*</RowBetween>*/}
 
       <RowBetween>
         <InfoText text={"Initial Margin Rate"}/>

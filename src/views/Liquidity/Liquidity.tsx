@@ -1,4 +1,4 @@
-import React, {useCallback, useContext, useState} from 'react';
+import React, {useCallback, useContext, useEffect, useState} from 'react';
 import styled from 'styled-components';
 import {useWallet} from 'use-wallet';
 import Page from '../../components/Page';
@@ -40,7 +40,14 @@ const Liquidity: React.FC = () => {
     },
     [addOpen, removeOpen]
   );
-  ReactGA.pageview('/Liquidity');
+  useEffect(() => {
+    ReactGA.pageview('/Liquidity');
+    if (!account || !para) {
+      connect('injected');
+    }
+  }, []);
+
+
 
   const ApproveSector: React.FC = () => {
     const [approveStatus, approve] = useApprove(para?.TestUSDT, para.contracts["ParaInstance"].address);
@@ -63,7 +70,7 @@ const Liquidity: React.FC = () => {
               <StyledModalAction>
                 <Button
                   size="lg"
-                  text="LP ADD"
+                  text="ADD LP"
                   onClick={() => {
                     setAddOpen(true)
                   }}
@@ -73,7 +80,7 @@ const Liquidity: React.FC = () => {
               <StyledModalAction>
                 <Button
                   size="lg"
-                  text="LP REMOVE"
+                  text="REMOVE LP"
                   onClick={() => {
                     setRemoveOpen(true)
                   }}
@@ -150,10 +157,7 @@ const Liquidity: React.FC = () => {
               addOpen={addOpen}
             />
           </Modal>
-
         </StyledCard>
-
-
       </Page>
 
     </>

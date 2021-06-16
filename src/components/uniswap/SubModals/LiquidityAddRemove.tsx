@@ -90,11 +90,6 @@ const Section = styled(AutoColumn)`
   padding: 24px;
 `
 
-const BottomSection = styled(Section)`
-  
-  border-bottom-left-radius: 20px;
-  border-bottom-right-radius: 20px;
-`
 
 
 export default function LiquidityAddRemove(
@@ -107,7 +102,7 @@ export default function LiquidityAddRemove(
   }) {
   // toggle between tokens and lists
   const {selectedToken} = useContext(PopupContext)
-  const poolSymbol = selectedToken==Tokens.BTC? 'BUSD-BTC' : "BUSD-ETH";
+  const poolSymbol = selectedToken == Tokens.BTC ? 'BUSD-BTC' : "BUSD-ETH";
   const [showLists, setShowLists] = useState(addOpen)
 
   const para = usePara()
@@ -116,9 +111,6 @@ export default function LiquidityAddRemove(
   const [collateralBN, setCollateralBN] = useState<BigNumber>(BigNumber.from(0))
   const [collateralVal, setCollateralVal] = useState<string>("0")
   const [availableMarginBN, setAvailableMarginBN] = useState<BigNumber>(BigNumber.from(0))
-
-
-
 
 
   useEffect(() => {
@@ -167,10 +159,15 @@ export default function LiquidityAddRemove(
   const handleOnAddMax = useCallback(
     () => {
       setCollateralBN(availableMarginBN);
-      setCollateralVal(BN2decimal(availableMarginBN));
+      if (availableMarginBN.gt(0)) {
+        setCollateralVal(BN2decimal(availableMarginBN));
+      } else {
+        setCollateralVal("0");
+      }
     },
     [availableMarginBN]
   )
+
 
   const handleOnRemoveMax = useCallback(
     () => {
@@ -210,29 +207,29 @@ export default function LiquidityAddRemove(
           <Column style={{width: '100%', flex: '1 1'}}>
             <PaddedColumn gap="lg">
               {showLists
-              ? ( <CurrencyInputPanel
-                value={collateralVal}
-                onUserInput={handleTypeInput}
-                onMax={handleOnAddMax}
-                showMaxButton={true}
-                label={'Amount'}
-                headerLabel={`Available Margin: ${BN2display(availableMarginBN)} BUSD`}
-                id="addlp"
-                showCurrency={true}
-                currencyName={'BUSD'}
-              />)
-              : ( <CurrencyInputPanel
-                value={collateralVal}
-                onUserInput={handleTypeInput}
-                onMax={handleOnRemoveMax}
-                showMaxButton={true}
-                label={'Amount'}
-                headerLabel={`Available Margin: ${BN2display(availableMarginBN)} BUSD`}
-                id="removelp"
-                showCurrency={true}
-                currencyName={poolSymbol}
-              />)
-            }
+                ? (<CurrencyInputPanel
+                  value={collateralVal}
+                  onUserInput={handleTypeInput}
+                  onMax={handleOnAddMax}
+                  showMaxButton={true}
+                  label={'Amount'}
+                  headerLabel={`Available Margin: ${BN2display(availableMarginBN)} BUSD`}
+                  id="addlp"
+                  showCurrency={true}
+                  currencyName={'BUSD'}
+                />)
+                : (<CurrencyInputPanel
+                  value={collateralVal}
+                  onUserInput={handleTypeInput}
+                  onMax={handleOnRemoveMax}
+                  showMaxButton={true}
+                  label={'Amount'}
+                  headerLabel={`Available Margin: ${BN2display(availableMarginBN)} BUSD`}
+                  id="removelp"
+                  showCurrency={true}
+                  currencyName={poolSymbol}
+                />)
+              }
               <RowFixed>
                 <TYPE.black fontSize={14} fontWeight={500} color={"#C3C5CB"}>
                   {`LP Balance: ${BN2display(lpTokenBalance)}`}
@@ -242,10 +239,12 @@ export default function LiquidityAddRemove(
           </Column>
           <SubWrapper>
             {showLists
-              ? (<ButtonCornered text="ADD" variant="secondary" onClick={handleAdd} disabled={pendingTransaction || availableMarginBN.lte(0)}
-              loading={pendingTransaction}/>)
-              : (<ButtonCornered text="REMOVE" variant="secondary" onClick={handleRemove} disabled={pendingTransaction || lpTokenBalance.lte(0)}
-              loading={pendingTransaction}/>)
+              ? (<ButtonCornered text="ADD" variant="secondary" onClick={handleAdd}
+                                 disabled={pendingTransaction || availableMarginBN.lte(0)}
+                                 loading={pendingTransaction}/>)
+              : (<ButtonCornered text="REMOVE" variant="secondary" onClick={handleRemove}
+                                 disabled={pendingTransaction || lpTokenBalance.lte(0)}
+                                 loading={pendingTransaction}/>)
             }
           </SubWrapper>
         </FooterWrapper>

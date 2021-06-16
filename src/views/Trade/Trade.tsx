@@ -70,12 +70,13 @@ const Trade: React.FC = () => {
   }, [account, chainId]);
 
   useEffect(() => {
+    ReactGA.pageview('/Trade');
     if (!account || !para) {
       connect('injected');
     }
   }, []);
 
-  ReactGA.pageview('/Trade');
+
   const ApproveSector: React.FC = () => {
     const [approveStatus, approve] = useApprove(para?.TestUSDT, para.contracts["ParaInstance"].address);
 

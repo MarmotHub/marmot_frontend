@@ -20,7 +20,7 @@ import {Para as ParaABI} from "../deployment/ABI/Para.json";
 import {ParaPlace as ParaPlaceABI} from "../deployment/ABI/ParaPlace.json";
 import {Pricing as PricingABI} from "../deployment/ABI/Pricing.json";
 import {Admin as AdminABI} from "../deployment/ABI/Admin.json"
-import {decimal2BN, decimalDiv, decimalMul} from "../utils/Converter";
+import {BN2decimal, decimal2BN, decimalDiv, decimalMul} from "../utils/Converter";
 import {MarginAccount, Side} from "../utils/Types";
 import ERC20Mintable from "./ERC20Mintable";
 
@@ -181,11 +181,49 @@ export class Para {
     return await PricingInstance.getMidPrice();
   }
 
+  async getMarkPrice(): Promise<BigNumber | undefined> {
+    const {PricingInstance} = this.contracts;
+    return await PricingInstance.getMarkPrice();
+  }
+
   async getTwapPrice(): Promise<BigNumber | undefined> {
     const {PricingInstance} = this.contracts;
     const twapPrice = await PricingInstance.getTwapPrice()
     return twapPrice
   }
+
+  async getPremium(): Promise<BigNumber | undefined> {
+    const {PricingInstance} = this.contracts;
+    const length = await PricingInstance.getReserveSnapshotLength()
+    if (length>0) {
+      let i;
+      let snapshot;
+      for (i = 0; i < length; i++) {
+        snapshot = await PricingInstance.getSpecificSnapshot(i)
+        console.log('idx', i, BN2decimal(snapshot.midPrice), BN2decimal(snapshot.indexPrice), snapshot.timestamp.toString(), snapshot.blockNumber.toString())
+      }
+    }
+    const premium = await PricingInstance.getTwapPremium();
+    if (premium) {
+      console.log('twapPremium', BN2decimal(premium));
+    }
+    const twapPrice = await PricingInstance.getTwapPrice();
+    if (twapPrice) {
+      console.log('twapPrice', BN2decimal(twapPrice));
+    }
+
+    const markPrice = await PricingInstance.getMarkPrice();
+     if (markPrice) {
+      console.log('markPrice', BN2decimal(markPrice));
+    }
+
+    const {AdminInstance} = this.contracts;
+    console.log('twap_interval', (await AdminInstance._TWAP_INTERVAL_()).toString())
+    // await AdminInstance.setTwapInterval(60);
+    // console.log('twap_interval', (await AdminInstance._TWAP_INTERVAL_()).toString())
+    return undefined
+  }
+
 
 
   async traderDeposit(amount: BigNumber): Promise<any> {
@@ -221,8 +259,8 @@ export class Para {
   async availableMargin(): Promise<BigNumber | undefined> {
     const {ParaInstance} = this.contracts;
     const marginAccount = await this.getMarginAccount()
-    const oraclePrice = await this.getIndexPrice()
-    return await ParaInstance.availableMargin(marginAccount, oraclePrice)
+    const markPrice = await this.getMarkPrice()
+    return await ParaInstance.availableMargin(marginAccount, markPrice)
   }
 
   async balanceMargin(): Promise<BigNumber | undefined> {
@@ -240,10 +278,10 @@ export class Para {
     const balancemargin = await ParaInstance.balanceMargin(marginAccount)
     let nominalValue: BigNumber
     if (marginAccount.SIDE===Side.FLAT || marginAccount.SIDE===side) { // SIDE===1 是short
-      nominalValue = decimalMul(marginAccount.SIZE.add(size), await this.getIndexPrice()) // 此处应用mark price
+      nominalValue = decimalMul(marginAccount.SIZE.add(size), await this.getMarkPrice()) // 此处应用mark price
     }
     else {
-      nominalValue = decimalMul(marginAccount.SIZE.sub(size), await this.getIndexPrice()) // 此处应用mark price
+      nominalValue = decimalMul(marginAccount.SIZE.sub(size), await this.getMarkPrice()) // 此处应用mark price
     }
     const leverage = balancemargin.gt(0)? decimalDiv(nominalValue, balancemargin): undefined
     return leverage
@@ -295,6 +333,12 @@ export class Para {
     const {PricingInstance} = this.contracts;
     return await PricingInstance._poolNetPositionRatio();
   }
+
+  async _poolEquity(): Promise<any> {
+    const {PricingInstance} = this.contracts;
+    return await PricingInstance._calculatePoolEquity();
+  }
+
 
   async _changeOracle(): Promise<any> {
     const {AdminInstance} = this.contracts;

@@ -159,7 +159,12 @@ export default function DepositWithdraw(
   const handleOnMaxWithdraw = useCallback(
     () => {
       setCollateralBN(availableMarginBalance);
-      setCollateralVal(BN2decimal(availableMarginBalance))
+      if (availableMarginBalance.gt(0)) {
+        setCollateralVal(BN2decimal(availableMarginBalance))
+      }
+      else {
+        setCollateralVal("0")
+      }
     },
     [availableMarginBalance]
   )

@@ -252,7 +252,7 @@ function PositionText(props: TextProps) {
 
 
 const StyledModal = styled(Modal)`
-  width: 360px;
+  width: 200px;
 `;
 
 const Wrapper = styled.div`

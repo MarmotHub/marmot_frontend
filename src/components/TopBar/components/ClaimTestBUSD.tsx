@@ -24,14 +24,16 @@ const ClaimTestBUSDButton: React.FC<TxButtonProps> = () => {
     }, [para]);
 
   // TODO
-  // useEffect(() => {
-  //   async function statusClaim() {
-  //     const status = await para.statusClaimTestBUSD()
-  //     console.log("claim status",status)
-  //     setClaimed(status)
-  //   }
-  //   statusClaim()
-  // }, [para.myAccount])
+  useEffect(() => {
+    async function statusClaim() {
+      if (para && para.isUnlocked) {
+        const status = await para.statusClaimTestBUSD()
+        console.log("claim status", status)
+        setClaimed(status)
+      }
+    }
+    statusClaim()
+  }, [para])
 
 
   return (

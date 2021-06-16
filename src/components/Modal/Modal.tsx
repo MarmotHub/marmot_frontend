@@ -11,7 +11,7 @@ export interface ModalProps {
 
 const Modal: React.FC = ({ children }) => {
   return (
-    <Container size="md">
+    <Container size="sm">
       <StyledModal>
         <Card>
           <CardContent>{children}</CardContent>
